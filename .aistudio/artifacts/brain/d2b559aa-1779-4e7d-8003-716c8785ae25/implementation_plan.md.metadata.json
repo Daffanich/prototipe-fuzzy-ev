@@ -1,0 +1,6 @@
+{
+  "summary": "Rencana implementasi input kuota energi (kWh) dan kalkulasi biaya dinamis dengan tarif Rp 2.500 per kWh pada Kios 1–4, lengkap dengan preset cepat (10 kWh, 20 kWh, Full, manual), rincian tagihan QRIS dinamis, dan penghentian otomatis saat kuota tercapai.",
+  "updatedAt": "2026-10-16T05:42:19.358879705Z",
+  "requestFeedback": true,
+  "userFacing": true
+}

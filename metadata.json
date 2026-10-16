@@ -1,0 +1,6 @@
+{
+  "name": "Smart Load Manager SPKLU",
+  "description": "Simulasi interaktif Sistem Cerdas SPKLU Fast Charging berbasis Fuzzy Logic Mamdani untuk optimasi alokasi daya pengisian kendaraan listrik.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

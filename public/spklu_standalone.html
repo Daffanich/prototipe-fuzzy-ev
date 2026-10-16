@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Load Manager SPKLU - Multi-Kios & Combined Dashboard (1-File Standalone)</title>
+  <meta name="description" content="Simulasi interaktif Sistem Cerdas SPKLU Fast Charging berbasis Fuzzy Logic Mamdani dengan 4 Kios dan Panel Sensor & Dashboard Terpadu.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-dark: #060911;
+      --bg-card: #0c1322;
+      --bg-card-alt: #090f1a;
+      --border-color: #1e293b;
+      --border-highlight: #334155;
+      --neon-green: #10b981;
+      --neon-cyan: #06b6d4;
+      --neon-purple: #a855f7;
+      --neon-amber: #f59e0b;
+      --neon-red: #ef4444;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .font-mono { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+    .container { width: 100%; max-width: 1100px; margin: 0 auto; padding: 1.5rem 1rem; }
+
+    /* Navbar */
+    .navbar {
+      background: rgba(7, 11, 20, 0.95);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(8px);
+    }
+    .navbar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.75rem 1.25rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      font-weight: 800;
+      font-size: 1rem;
+    }
+    .brand-badge {
+      font-size: 0.65rem;
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--neon-green);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      padding: 0.15rem 0.35rem;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .nav-links { display: flex; gap: 0.35rem; overflow-x: auto; }
+    .nav-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      padding: 0.4rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .nav-btn:hover { background: #111a2e; color: #fff; }
+    .nav-btn.active {
+      background: rgba(6, 182, 212, 0.15);
+      color: var(--neon-cyan);
+      border-color: rgba(6, 182, 212, 0.4);
+    }
+    .top-action-btn {
+      padding: 0.35rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 1px solid var(--border-highlight);
+      background: #0f172a;
+      color: #cbd5e1;
+    }
+    .top-action-btn.active-sim {
+      background: var(--neon-green);
+      color: #060911;
+      border-color: var(--neon-green);
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+    }
+
+    /* Views */
+    .view-content { display: none; animation: fadeIn 0.2s ease-in-out; }
+    .view-content.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    }
+    .hero-card {
+      background: linear-gradient(180deg, #0e172a 0%, #080d17 100%);
+      border: 1px solid #1e2c4a;
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+    }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem; }
+    .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      padding: 0.65rem 1.15rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+    .btn-green { background: var(--neon-green); color: #060911; }
+    .btn-cyan { background: var(--neon-cyan); color: #060911; }
+    .btn-outline { background: transparent; border: 1px solid var(--border-highlight); color: #cbd5e1; }
+    .btn-outline:hover { background: #111a2e; color: #fff; }
+
+    /* Sliders */
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 8px;
+      background: #111a2e;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      outline: none;
+      margin: 0.5rem 0;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--neon-cyan);
+      cursor: pointer;
+      border: 2px solid #060911;
+      box-shadow: 0 0 10px rgba(6, 182, 212, 0.6);
+    }
+    input[type="range"]:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* Urgency Cards */
+    .urgency-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1.25rem 0; }
+    .urgency-card {
+      background: #090e19;
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.25rem;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .urgency-card:hover { border-color: var(--neon-cyan); }
+    .urgency-card.selected { border-color: var(--neon-cyan); background: rgba(6, 182, 212, 0.15); }
+
+    /* Battery Bar */
+    .battery-bar {
+      width: 100%;
+      height: 24px;
+      background: #020617;
+      border: 2px solid #334155;
+      border-radius: 8px;
+      overflow: hidden;
+      padding: 2px;
+    }
+    .battery-fill {
+      height: 100%;
+      border-radius: 5px;
+      background: linear-gradient(90deg, var(--neon-green), var(--neon-cyan));
+      transition: width 0.4s ease;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.2rem 0.5rem;
+      border-radius: 9999px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .badge-fast { background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid #c084fc; }
+    .badge-std { background: rgba(6, 182, 212, 0.2); color: #38bdf8; border: 1px solid #38bdf8; }
+    .badge-trickle { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #34d399; }
+    .badge-locked { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #fbbf24; }
+
+    footer {
+      margin-top: auto;
+      border-top: 1px solid var(--border-color);
+      padding: 1rem;
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR: Beranda, Kios 1, Kios 2, Kios 3, Kios 4, Dashboard & Sensor, Kurva Fuzzy -->
+  <header class="navbar">
+    <div class="navbar-inner">
+      <div class="brand" onclick="navigate('landing')">
+        <span>⚡ VOLTMIND</span>
+        <span class="brand-badge">SPKLU MAMDANI</span>
+      </div>
+
+      <nav class="nav-links">
+        <button class="nav-btn active" id="btn-nav-landing" onclick="navigate('landing')">Beranda</button>
+        <button class="nav-btn" id="btn-nav-kiosk1" onclick="openKiosk(1)">Kios 1</button>
+        <button class="nav-btn" id="btn-nav-kiosk2" onclick="openKiosk(2)">Kios 2</button>
+        <button class="nav-btn" id="btn-nav-kiosk3" onclick="openKiosk(3)">Kios 3</button>
+        <button class="nav-btn" id="btn-nav-kiosk4" onclick="openKiosk(4)">Kios 4</button>
+        <button class="nav-btn" id="btn-nav-dashboard" onclick="navigate('dashboard')">Dashboard & Sensor</button>
+        <button class="nav-btn" id="btn-nav-fuzzy" onclick="navigate('fuzzy')">Kurva Fuzzy</button>
+      </nav>
+
+      <div style="display: flex; gap: 0.5rem; align-items: center;">
+        <button class="top-action-btn" id="btn-auto-sim" onclick="toggleAutoSim()">Auto Sim: OFF</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- VIEW 1: BERANDA -->
+    <section id="view-landing" class="view-content active">
+      <div class="hero-card">
+        <div style="font-size: 0.75rem; color: var(--neon-green); font-family: monospace; margin-bottom: 0.5rem;">
+          PORTFOLIO SHOWCASE: AI & INTELLIGENT ENERGY SYSTEMS
+        </div>
+        <h1 style="font-size: 2.2rem; font-weight: 800; line-height: 1.2; margin-bottom: 0.75rem;">
+          Smart Load Manager SPKLU <br>
+          <span style="color: var(--neon-cyan);">Fuzzy Logic Mamdani Simulation</span>
+        </h1>
+        <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 750px; margin-bottom: 1.5rem;">
+          Sistem manajemen beban dinamis 4 Kios SPKLU dengan ruang kendali Central Dashboard & Panel Sensor terpadu. Input sensor diatur sebelum charging dan otomatis terkunci selama pengisian untuk perlindungan trafo gedung.
+        </p>
+
+        <div class="grid-4" style="border-top: 1px solid var(--border-color); padding-top: 1rem;">
+          <div>
+            <div style="font-size: 0.7rem; color: var(--text-muted); font-family: monospace;">DAYA GEDUNG</div>
+            <div class="font-mono" style="font-size: 1.5rem; font-weight: 700; color: var(--neon-green);" id="hero-bldg">68 kW</div>
+          </div>
+          <div>
+            <div style="font-size: 0.7rem; color: var(--text-muted); font-family: monospace;">PORT CHARGING</div>
+            <div class="font-mono" style="font-size: 1.5rem; font-weight: 700; color: var(--neon-cyan);" id="hero-active">0 / 4</div>
+          </div>
+          <div>
+            <div style="font-size: 0.7rem; color: var(--text-muted); font-family: monospace;">BEBAN TOTAL SPKLU</div>
+            <div class="font-mono" style="font-size: 1.5rem; font-weight: 700; color: var(--neon-purple);" id="hero-load">0 kW</div>
+          </div>
+          <div>
+            <div style="font-size: 0.7rem; color: var(--text-muted); font-family: monospace;">CADANGAN AMAN</div>
+            <div class="font-mono" style="font-size: 1.5rem; font-weight: 700; color: var(--neon-amber);" id="hero-reserve">68 kW</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="border-color: rgba(168,85,247,0.5); cursor: pointer;" onclick="navigate('dashboard')">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <span style="font-size: 0.7rem; color: var(--neon-purple); font-family: monospace; font-weight: 700;">RUANG KENDALI TERPADU</span>
+            <h3 style="font-size: 1.25rem; font-weight: 800;">Central Dashboard & Panel Sensor</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">
+              Atur sisa daya gedung & input SoC 4 port sebelum charging. Pantau pembagian beban trafo secara realtime.
+            </p>
+          </div>
+          <button class="btn btn-green">Buka Dashboard & Sensor →</button>
+        </div>
+      </div>
+
+      <h2 style="font-size: 1.15rem; font-weight: 700; margin: 1.5rem 0 0.75rem 0;">Pilih Layar Kios Pengguna (Kios 1 - 4)</h2>
+      <div class="grid-4" id="landing-kiosks-grid">
+        <!-- Diisi JS -->
+      </div>
+    </section>
+
+    <!-- VIEW GABUNGAN: CENTRAL DASHBOARD & PANEL SENSOR -->
+    <section id="view-dashboard" class="view-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
+        <div>
+          <div style="font-size: 0.75rem; color: var(--neon-purple); font-family: monospace;">VIEW TERPADU // SCADA & SENSOR</div>
+          <h1 style="font-size: 1.6rem; font-weight: 800;">Central Dashboard & Panel Sensor</h1>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">
+            Input SoC hanya dapat disetel sebelum charging. Setelah charging dimulai di kios, input otomatis terkunci.
+          </p>
+        </div>
+      </div>
+
+      <!-- Bagian Atas: Daya Gedung -->
+      <div class="card" style="background: linear-gradient(180deg, #0e172a 0%, #090f1d 100%);">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.5rem;">
+          <div>
+            <span style="font-size: 0.7rem; color: var(--text-muted); font-family: monospace;">TRAFO GEDUNG INDUK</span>
+            <h2 style="font-size: 1.35rem; font-weight: 800;">Total Sisa Daya Gedung Saat Ini</h2>
+          </div>
+          <div class="font-mono" style="font-size: 2.5rem; font-weight: 900; color: var(--neon-green);" id="dash-bldg-val">68 kW</div>
+        </div>
+
+        <div style="margin: 0.75rem 0;">
+          <input type="range" id="dash-bldg-slider" min="0" max="100" value="68" oninput="handleBuildingPowerSlider(this.value)">
+          <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); font-family: monospace;">
+            <span style="color: var(--neon-red);">0 kW (Kritis &lt;30)</span>
+            <span style="color: var(--neon-amber);">30 kW (Sedang 30-60)</span>
+            <span style="color: var(--neon-green);">100 kW (Aman &gt;60)</span>
+          </div>
+        </div>
+
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-family: monospace; margin-bottom: 0.25rem;">
+            <span>Beban SPKLU Terpakai: <strong id="dash-spklu-used" style="color: var(--neon-purple);">0 kW</strong></span>
+            <span>Sisa Cadangan Bersih: <strong id="dash-net-remain" style="color: var(--neon-green);">68 kW</strong></span>
+          </div>
+          <div style="width: 100%; height: 14px; background: #020617; border-radius: 6px; overflow: hidden; display: flex;">
+            <div id="dash-bar-spklu" style="width: 0%; background: var(--neon-purple); height: 100%;"></div>
+            <div id="dash-bar-remain" style="width: 68%; background: var(--neon-green); height: 100%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bagian Bawah: Grid 2x2 Port Sensor & Telemetri -->
+      <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 1rem;">Sensor & Status 4 Port SPKLU (Grid 2x2)</h3>
+      <div class="grid-2" id="dashboard-ports-grid">
+        <!-- Diisi secara dinamis oleh JS -->
+      </div>
+    </section>
+
+    <!-- VIEW KIOS (PORT 1..4 WIZARD) -->
+    <section id="view-kiosk" class="view-content">
+      <div class="card" style="border-color: rgba(6,182,212,0.4);">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1.25rem;">
+          <div>
+            <div style="font-size: 0.7rem; color: var(--neon-cyan); font-family: monospace; font-weight: 700;">
+              SPKLU DISPENSER TOUCHSCREEN // KIOS <span id="kiosk-port-num">1</span>
+            </div>
+            <h2 style="font-size: 1.5rem; font-weight: 800;" id="kiosk-vehicle-title">Port 1 - Hyundai Ioniq 5</h2>
+          </div>
+          <button class="btn btn-outline" style="font-size: 0.75rem;" onclick="navigate('dashboard')">
+            ⚙ Buka Dashboard & Sensor
+          </button>
+        </div>
+
+        <div class="steps-nav">
+          <div class="step-indicator active" id="kstep-1" onclick="goKioskStep(1)">1. Identifikasi</div>
+          <div class="step-indicator" id="kstep-2" onclick="goKioskStep(2)">2. Pilih Urgensi</div>
+          <div class="step-indicator" id="kstep-3" onclick="goKioskStep(3)">3. Pembayaran</div>
+          <div class="step-indicator" id="kstep-4" onclick="goKioskStep(4)">4. Charging</div>
+        </div>
+
+        <!-- Step 1 -->
+        <div id="kpanel-1">
+          <div class="card" style="background: #090e18; margin-bottom: 1rem;">
+            <div style="font-size: 0.75rem; color: var(--text-muted); font-family: monospace;">PEMBACAAN OTOMATIS DARI SENSOR DASHBOARD</div>
+            <div class="font-mono" style="font-size: 3rem; font-weight: 900; color: var(--neon-cyan);" id="kiosk-soc-val">18%</div>
+            <div style="font-weight: 700;" id="kiosk-soc-text">Terdeteksi Baterai: 18%</div>
+            <div class="battery-bar" style="margin-top: 0.5rem;">
+              <div class="battery-fill" id="kiosk-soc-fill" style="width: 18%;"></div>
+            </div>
+          </div>
+          <div style="text-align: right;">
+            <button class="btn btn-cyan" onclick="goKioskStep(2)">Lanjut: Pilih Urgensi Pengisian →</button>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div id="kpanel-2" style="display: none;">
+          <h3 style="font-size: 1.25rem; font-weight: 800; text-align: center; margin-bottom: 0.25rem;">Pilih Tingkat Urgensi & Kuota Energi</h3>
+          <p style="font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-bottom: 1rem;">
+            Tarif Resmi SPKLU: <strong style="color: var(--neon-green);">Rp 2.500 / kWh</strong>
+          </p>
+
+          <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); font-family: monospace; margin-bottom: 0.25rem;">
+            1. PILIH PRIORITAS URGENSI:
+          </div>
+          <div class="urgency-grid">
+            <div class="urgency-card" id="ucard-santai" onclick="chooseUrgency('SANTAI')">
+              <div style="font-size: 2rem;">☕</div>
+              <h4 style="font-size: 1.25rem; font-weight: 800;">SANTAI</h4>
+              <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">Trickle (5-10 kW)</p>
+            </div>
+            <div class="urgency-card" id="ucard-sedang" onclick="chooseUrgency('SEDANG')">
+              <div style="font-size: 2rem;">⏳</div>
+              <h4 style="font-size: 1.25rem; font-weight: 800;">SEDANG</h4>
+              <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">Standard (11-22 kW)</p>
+            </div>
+            <div class="urgency-card" id="ucard-buruburu" onclick="chooseUrgency('BURU-BURU')">
+              <div style="font-size: 2rem;">⚡</div>
+              <h4 style="font-size: 1.25rem; font-weight: 800;">BURU-BURU</h4>
+              <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">Fast Priority (23-50 kW)</p>
+            </div>
+          </div>
+
+          <!-- Input Kuota Energi (kWh) -->
+          <div style="background: #090e18; border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem; margin: 1rem 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+              <span style="font-weight: 700; font-size: 0.9rem;">2. Tentukan Kuota Energi yang Ingin Diisi</span>
+              <span style="font-size: 0.75rem; font-family: monospace; color: var(--neon-cyan);">Rp 2.500 / kWh</span>
+            </div>
+
+            <!-- Tombol Preset Cepat -->
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; margin-bottom: 1rem;">
+              <button class="btn btn-outline" style="padding: 0.4rem; font-size: 0.75rem; font-family: monospace;" onclick="setKioskKwh(10)">
+                10 kWh<br><span style="color: var(--neon-green); font-size: 0.65rem;">Rp 25.000</span>
+              </button>
+              <button class="btn btn-outline" style="padding: 0.4rem; font-size: 0.75rem; font-family: monospace;" onclick="setKioskKwh(20)">
+                20 kWh<br><span style="color: var(--neon-green); font-size: 0.65rem;">Rp 50.000</span>
+              </button>
+              <button class="btn btn-outline" style="padding: 0.4rem; font-size: 0.75rem; font-family: monospace;" onclick="setKioskKwh(30)">
+                30 kWh<br><span style="color: var(--neon-green); font-size: 0.65rem;">Rp 75.000</span>
+              </button>
+              <button class="btn btn-outline" style="padding: 0.4rem; font-size: 0.75rem; font-family: monospace;" onclick="setKioskKwh('FULL')">
+                Isi Penuh<br><span style="color: var(--neon-cyan); font-size: 0.65rem;">Maksimal</span>
+              </button>
+            </div>
+
+            <!-- Stepper Manual & Total Tagihan -->
+            <div style="display: flex; justify-content: space-between; align-items: center; background: #060911; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid var(--border-color); flex-wrap: wrap; gap: 0.5rem;">
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Atur Kuota:</span>
+                <input type="number" id="kiosk-input-kwh" min="1" max="100" value="20" style="width: 70px; background: #111a2e; border: 1px solid var(--border-color); color: #fff; padding: 0.3rem; border-radius: 6px; font-weight: 700; text-align: center; font-family: monospace;" oninput="onKwhManualInput(this.value)">
+                <span class="font-mono" style="font-size: 0.85rem; color: var(--neon-cyan); font-weight: 700;">kWh</span>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 0.7rem; color: var(--text-muted); font-family: monospace;">TOTAL ESTIMASI BIAYA:</div>
+                <div class="font-mono" style="font-size: 1.5rem; font-weight: 900; color: var(--neon-green);" id="kiosk-total-price-text">Rp 50.000</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; margin-top: 1rem;">
+            <button class="btn btn-outline" onclick="goKioskStep(1)">← Kembali</button>
+            <button class="btn btn-cyan" onclick="goKioskStep(3)">Lanjut ke Pembayaran QRIS →</button>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div id="kpanel-3" style="display: none; text-align: center;">
+          <h3 style="font-size: 1.25rem; font-weight: 800;">Pembayaran Kuota Energi</h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+            Silakan scan untuk membayar kuota energi sebesar <strong style="color: var(--neon-cyan);" id="qris-kwh-text">20 kWh</strong>
+          </p>
+          <div style="max-width: 280px; margin: 0 auto; background: #fff; color: #000; padding: 1.25rem; border-radius: 12px;">
+            <div style="font-weight: 800; color: #dc2626; margin-bottom: 0.25rem;">QRIS NASIONAL</div>
+            <div style="font-size: 0.7rem; color: #64748b; margin-bottom: 0.5rem;" id="qris-merchant-text">VOLTMIND SPKLU - KIOS 01</div>
+            <svg style="width: 150px; height: 150px;" viewBox="0 0 100 100">
+              <rect width="100" height="100" fill="white" />
+              <rect x="5" y="5" width="24" height="24" fill="black" /><rect x="8" y="8" width="18" height="18" fill="white" /><rect x="11" y="11" width="12" height="12" fill="black" />
+              <rect x="71" y="5" width="24" height="24" fill="black" /><rect x="74" y="8" width="18" height="18" fill="white" /><rect x="77" y="11" width="12" height="12" fill="black" />
+              <rect x="5" y="71" width="24" height="24" fill="black" /><rect x="8" y="74" width="18" height="18" fill="white" /><rect x="11" y="77" width="12" height="12" fill="black" />
+              <rect x="35" y="10" width="8" height="8" fill="black" /><rect x="35" y="35" width="30" height="30" fill="#10b981" />
+            </svg>
+            <div style="background: #f1f5f9; padding: 0.5rem; border-radius: 6px; margin-top: 0.5rem; font-family: monospace;">
+              <div style="font-size: 0.65rem; color: #64748b;">TOTAL TAGIHAN (RP 2.500/KWH)</div>
+              <div style="font-size: 1.25rem; font-weight: 800; color: #0f172a;" id="qris-price-text">Rp 50.000</div>
+            </div>
+          </div>
+          <div style="margin-top: 1rem;">
+            <button class="btn btn-green" onclick="simulatePayment()">✓ Simulasikan Pembayaran Berhasil</button>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div id="kpanel-4" style="display: none;">
+          <div style="background: linear-gradient(90deg, #0f1d33 0%, #0c1629 100%); border: 2px solid var(--neon-cyan); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+            <div>
+              <div style="font-size: 0.75rem; color: var(--neon-cyan); font-family: monospace;">HASIL EVALUASI FUZZY LOGIC</div>
+              <div class="font-mono" style="font-size: 2.5rem; font-weight: 900;" id="kiosk-power-out">38.0 kW</div>
+              <div id="kiosk-status-badge" class="badge badge-fast">FAST CHARGING</div>
+            </div>
+            <div style="font-size: 0.75rem; color: var(--neon-amber); font-family: monospace; border: 1px solid var(--neon-amber); padding: 0.4rem 0.6rem; border-radius: 6px;">
+              🔒 INPUT SENSOR DASHBOARD TERKUNCI
+            </div>
+          </div>
+
+          <div class="card" style="background: #090e18;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+              <span style="font-weight: 700; color: var(--neon-green);">SEDANG MENGISI DAYA</span>
+              <span class="font-mono" id="kiosk-charging-soc">18.0%</span>
+            </div>
+            <div class="battery-bar">
+              <div class="battery-fill" id="kiosk-charging-bar" style="width: 18%;"></div>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; margin-top: 1rem;">
+            <button class="btn btn-outline" onclick="stopCharging()">Hentikan Pengisian / Selesai</button>
+            <button class="btn btn-cyan" onclick="navigate('dashboard')">Lihat Central Dashboard →</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW KURVA FUZZY -->
+    <section id="view-fuzzy" class="view-content">
+      <div class="card">
+        <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem;">Kurva Keanggotaan Fuzzy Mamdani</h2>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+          Representasi matematika fungsi keanggotaan input dan agregasi output Centroid.
+        </p>
+        <div id="fuzzy-svg-box"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    VOLTMIND SPKLU LOAD MANAGER &copy; 2026 · Multi-Kios & Combined SCADA Sensor
+  </footer>
+
+  <script>
+    /* -------------------------------------------------------------
+       STATE MANAGEMENT MULTI-KIOS & DASHBOARD
+       ------------------------------------------------------------- */
+    const STORAGE_KEY = "voltmind_spklu_multikiosk_standalone_v2";
+
+    const TARIFF = 2500; // Rp 2.500 / kWh
+    function formatRp(num) {
+      return "Rp " + Math.round(num).toLocaleString('id-ID');
+    }
+
+    const defaultState = {
+      buildingPower: 68,
+      activeKioskId: 1,
+      ports: [
+        { id: 1, name: "Hyundai Ioniq 5", soc: 18, cap: 72.6, targetKwh: 20, urgency: "BURU-BURU", status: "CONNECTED", powerKw: 0, mode: "Siap Mengisi", step: 1, energyKwh: 0 },
+        { id: 2, name: "BYD Seal", soc: 45, cap: 82.5, targetKwh: 25, urgency: "SEDANG", status: "CONNECTED", powerKw: 0, mode: "Siap Mengisi", step: 1, energyKwh: 0 },
+        { id: 3, name: "Nissan Leaf", soc: 72, cap: 62.0, targetKwh: 15, urgency: "SANTAI", status: "CONNECTED", powerKw: 0, mode: "Siap Mengisi", step: 1, energyKwh: 0 },
+        { id: 4, name: "Wuling Air EV", soc: 35, cap: 26.7, targetKwh: 10, urgency: "SANTAI", status: "CONNECTED", powerKw: 0, mode: "Siap Mengisi", step: 1, energyKwh: 0 },
+      ],
+      isAutoSim: false
+    };
+
+    let appState = (() => {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? { ...defaultState, ...JSON.parse(raw) } : { ...defaultState };
+      } catch {
+        return { ...defaultState };
+      }
+    })();
+
+    function saveState() {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(appState)); } catch(e){}
+    }
+
+    /* -------------------------------------------------------------
+       LOGIKA FUZZY MAMDANI
+       ------------------------------------------------------------- */
+    function calcFuzzy(bldg, soc, urg) {
+      const uVal = urg === 'SANTAI' ? 15 : urg === 'SEDANG' ? 50 : 85;
+      const bKritis = bldg <= 20 ? 1 : bldg >= 35 ? 0 : (35 - bldg) / 15;
+      const bSedang = (bldg <= 25 || bldg >= 75) ? 0 : bldg === 50 ? 1 : bldg < 50 ? (bldg - 25)/25 : (75 - bldg)/25;
+      const bAman = bldg <= 65 ? 0 : bldg >= 80 ? 1 : (bldg - 65)/15;
+
+      const sRendah = soc <= 20 ? 1 : soc >= 35 ? 0 : (35 - soc) / 15;
+      const sMedium = (soc <= 25 || soc >= 75) ? 0 : soc === 50 ? 1 : soc < 50 ? (soc - 25)/25 : (75 - soc)/25;
+      const sTinggi = soc <= 65 ? 0 : soc >= 80 ? 1 : (soc - 65)/15;
+
+      const uSantai = uVal <= 25 ? 1 : uVal >= 45 ? 0 : (45 - uVal)/20;
+      const uSedang = (uVal <= 30 || uVal >= 70) ? 0 : uVal === 50 ? 1 : uVal < 50 ? (uVal - 30)/20 : (70 - uVal)/20;
+      const uBuru = uVal <= 55 ? 0 : uVal >= 75 ? 1 : (uVal - 55)/20;
+
+      // 4 Rule Utama Prompt
+      let aTrickle = Math.max(Math.min(bKritis, sTinggi, uSantai), Math.min(bKritis, sRendah, uSantai));
+      let aStandard = Math.max(Math.min(bKritis, sRendah, uBuru), Math.min(bSedang, sMedium, uSedang));
+      let aFast = Math.max(Math.min(bAman, sRendah, uBuru), Math.min(bAman, sMedium, uBuru));
+
+      // Centroid sampling
+      let num = 0, den = 0;
+      for (let z = 5; z <= 50; z += 1) {
+        const mT = Math.min(aTrickle, z <= 8 ? 1 : z >= 12 ? 0 : (12 - z)/4);
+        const mS = Math.min(aStandard, (z <= 10 || z >= 24) ? 0 : z === 17 ? 1 : z < 17 ? (z-10)/7 : (24-z)/7);
+        const mF = Math.min(aFast, z <= 22 ? 0 : z >= 36 ? 1 : (z-22)/14);
+        const mAgg = Math.max(mT, mS, mF);
+        num += z * mAgg;
+        den += mAgg;
+      }
+      let centroid = den > 0 ? num / den : 15;
+      centroid = Math.round(centroid * 10) / 10;
+      if (centroid > bldg - 3) centroid = Math.max(5, bldg - 3);
+
+      let status = "Standard Charging";
+      if (centroid < 11) status = "Trickle Charging";
+      else if (centroid > 22) status = "Fast Charging";
+
+      return { power: centroid, status };
+    }
+
+    /* -------------------------------------------------------------
+       NAVIGASI VIEW
+       ------------------------------------------------------------- */
+    function navigate(view) {
+      document.querySelectorAll('.view-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+
+      if (view.startsWith('kiosk')) {
+        document.getElementById('view-kiosk').classList.add('active');
+        const b = document.getElementById('btn-nav-' + view);
+        if (b) b.classList.add('active');
+      } else {
+        const v = document.getElementById('view-' + view);
+        if (v) v.classList.add('active');
+        const b = document.getElementById('btn-nav-' + view);
+        if (b) b.classList.add('active');
+      }
+
+      renderAll();
+      saveState();
+    }
+
+    function openKiosk(id) {
+      appState.activeKioskId = id;
+      navigate('kiosk' + id);
+    }
+
+    /* -------------------------------------------------------------
+       RENDER UI
+       ------------------------------------------------------------- */
+    function renderAll() {
+      const totalLoad = appState.ports.reduce((s, p) => s + (p.status === 'CHARGING' ? p.powerKw : 0), 0);
+      const remain = Math.max(0, appState.buildingPower - totalLoad);
+
+      // Hero
+      document.getElementById('hero-bldg').innerText = appState.buildingPower + ' kW';
+      document.getElementById('hero-active').innerText = appState.ports.filter(p => p.status === 'CHARGING').length + ' / 4';
+      document.getElementById('hero-load').innerText = totalLoad + ' kW';
+      document.getElementById('hero-reserve').innerText = remain + ' kW';
+
+      // Dashboard
+      document.getElementById('dash-bldg-val').innerText = appState.buildingPower + ' kW';
+      document.getElementById('dash-bldg-slider').value = appState.buildingPower;
+      document.getElementById('dash-spklu-used').innerText = totalLoad + ' kW';
+      document.getElementById('dash-net-remain').innerText = remain + ' kW';
+      document.getElementById('dash-bar-spklu').style.width = Math.min(100, totalLoad) + '%';
+      document.getElementById('dash-bar-remain').style.width = Math.min(100, remain) + '%';
+
+      // Landing Kiosks Cards
+      const landGrid = document.getElementById('landing-kiosks-grid');
+      if (landGrid) {
+        landGrid.innerHTML = appState.ports.map(p => `
+          <div class="card" style="cursor: pointer;" onclick="openKiosk(${p.id})">
+            <div style="font-weight: 800; font-size: 1rem; margin-bottom: 0.25rem;">Kios ${p.id}</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">${p.name}</div>
+            <div style="margin: 0.5rem 0;" class="font-mono">${p.soc}% SoC</div>
+            <div style="font-size: 0.75rem; color: ${p.status === 'CHARGING' ? 'var(--neon-green)' : 'var(--text-muted)'}; font-weight: 700;">
+              ${p.status === 'CHARGING' ? '⚡ ' + p.powerKw + ' kW Charging' : 'Siap Input'}
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // Dashboard Grid 2x2: SENSOR INPUT TERKUNCI JIKA CHARGING
+      const dGrid = document.getElementById('dashboard-ports-grid');
+      if (dGrid) {
+        dGrid.innerHTML = appState.ports.map(p => {
+          const isCharging = p.status === 'CHARGING';
+          return `
+            <div class="card" style="border-color: ${isCharging ? 'var(--neon-cyan)' : 'var(--border-color)'};">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <div>
+                  <strong>Kios ${p.id}</strong> - <span style="font-size: 0.85rem; color: var(--text-muted);">${p.name}</span>
+                </div>
+                <span class="badge ${isCharging ? 'badge-fast' : 'badge-std'}">${p.status}</span>
+              </div>
+
+              <!-- Input Sensor SoC (Terkunci jika Charging) -->
+              <div style="background: #070b14; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-color); margin: 0.5rem 0;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-family: monospace;">
+                  <span>${isCharging ? '🔒 INPUT SENSOR TERKUNCI (CHARGING)' : '✓ INPUT SENSOR SOC'}</span>
+                  <strong style="color: var(--neon-cyan);">${p.soc}%</strong>
+                </div>
+                <input type="range" min="1" max="100" value="${p.soc}" ${isCharging ? 'disabled' : ''} oninput="updatePortSoc(${p.id}, this.value)">
+                ${isCharging ? '<div style="font-size: 0.65rem; color: var(--neon-amber);">Parameter dikunci selama daya mengalir. Hentikan di Kios untuk membuka.</div>' : ''}
+              </div>
+
+              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin: 0.5rem 0;">
+                <span>Daya Aktif: <strong style="color: var(--neon-cyan);">${p.powerKw} kW</strong></span>
+                <span>Mode: <strong>${p.mode}</strong></span>
+              </div>
+
+              <button class="btn btn-cyan" style="width: 100%; padding: 0.4rem; font-size: 0.8rem;" onclick="openKiosk(${p.id})">
+                Buka Layar Kios ${p.id} →
+              </button>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Kiosk Active Port Render
+      renderActiveKiosk();
+    }
+
+    function renderActiveKiosk() {
+      const p = appState.ports[appState.activeKioskId - 1];
+      if (!p) return;
+
+      document.getElementById('kiosk-port-num').innerText = p.id;
+      document.getElementById('kiosk-vehicle-title').innerText = `Kios ${p.id} - ${p.name}`;
+      document.getElementById('kiosk-soc-val').innerText = p.soc + '%';
+      document.getElementById('kiosk-soc-text').innerText = `Terdeteksi Baterai: ${p.soc}%`;
+      document.getElementById('kiosk-soc-fill').style.width = p.soc + '%';
+
+      // Wizard steps
+      for (let i = 1; i <= 4; i++) {
+        document.getElementById('kpanel-' + i).style.display = (i === p.step) ? 'block' : 'none';
+        const tab = document.getElementById('kstep-' + i);
+        if (i === p.step) tab.className = 'step-indicator active';
+        else if (i < p.step) tab.className = 'step-indicator done';
+        else tab.className = 'step-indicator';
+      }
+
+      // Urgency select state
+      ['santai', 'sedang', 'buruburu'].forEach(u => {
+        const el = document.getElementById('ucard-' + u);
+        if (el) el.classList.remove('selected');
+      });
+      const curU = document.getElementById('ucard-' + p.urgency.toLowerCase().replace('-', ''));
+      if (curU) curU.classList.add('selected');
+
+      // Kuota kWh display & total price
+      const kwhInput = document.getElementById('kiosk-input-kwh');
+      if (kwhInput) kwhInput.value = p.targetKwh || 20;
+      const priceText = document.getElementById('kiosk-total-price-text');
+      if (priceText) priceText.innerText = formatRp((p.targetKwh || 20) * TARIFF);
+
+      // Step 3 invoice
+      const qrisKwh = document.getElementById('qris-kwh-text');
+      if (qrisKwh) qrisKwh.innerText = (p.targetKwh || 20) + ' kWh';
+      const qrisPrice = document.getElementById('qris-price-text');
+      if (qrisPrice) qrisPrice.innerText = formatRp((p.targetKwh || 20) * TARIFF);
+      const qrisMerchant = document.getElementById('qris-merchant-text');
+      if (qrisMerchant) qrisMerchant.innerText = `VOLTMIND SPKLU - KIOS 0${p.id} (${p.name})`;
+
+      // Step 4
+      document.getElementById('kiosk-power-out').innerText = p.powerKw + ' kW';
+      document.getElementById('kiosk-charging-soc').innerText = p.soc.toFixed(1) + '%';
+      document.getElementById('kiosk-charging-bar').style.width = p.soc + '%';
+      document.getElementById('kiosk-status-badge').innerText = p.mode.toUpperCase();
+    }
+
+    function setKioskKwh(val) {
+      const p = appState.ports[appState.activeKioskId - 1];
+      const maxKwh = Math.max(1, Math.round(((100 - p.soc)/100) * (p.cap || 60)));
+      if (val === 'FULL') {
+        p.targetKwh = maxKwh;
+      } else {
+        p.targetKwh = Math.min(maxKwh, Number(val));
+      }
+      renderActiveKiosk();
+      saveState();
+    }
+
+    function onKwhManualInput(val) {
+      const p = appState.ports[appState.activeKioskId - 1];
+      const num = Number(val);
+      if (num >= 1) {
+        p.targetKwh = num;
+        renderActiveKiosk();
+        saveState();
+      }
+    }
+
+    /* -------------------------------------------------------------
+       USER INTERACTIONS
+       ------------------------------------------------------------- */
+    function handleBuildingPowerSlider(val) {
+      appState.buildingPower = Number(val);
+      renderAll();
+      saveState();
+    }
+
+    function updatePortSoc(portId, val) {
+      const p = appState.ports[portId - 1];
+      if (p.status === 'CHARGING') return; // INTERLOCK LOCK
+      p.soc = Number(val);
+      renderAll();
+      saveState();
+    }
+
+    function goKioskStep(step) {
+      const p = appState.ports[appState.activeKioskId - 1];
+      p.step = step;
+      renderAll();
+      saveState();
+    }
+
+    function chooseUrgency(u) {
+      const p = appState.ports[appState.activeKioskId - 1];
+      p.urgency = u;
+      renderActiveKiosk();
+      saveState();
+    }
+
+    function simulatePayment() {
+      const p = appState.ports[appState.activeKioskId - 1];
+      const res = calcFuzzy(appState.buildingPower, p.soc, p.urgency);
+      p.status = 'CHARGING'; // INI AKAN OTOMATIS MENGUNCI INPUT DI DASHBOARD
+      p.powerKw = res.power;
+      p.mode = res.status;
+      p.energyKwh = 0;
+      p.step = 4;
+      renderAll();
+      saveState();
+    }
+
+    function stopCharging() {
+      const p = appState.ports[appState.activeKioskId - 1];
+      p.status = 'COMPLETED'; // INI AKAN OTOMATIS MEMBUKA KEMBALI KUNCI DI DASHBOARD
+      p.powerKw = 0;
+      renderAll();
+      saveState();
+    }
+
+    /* -------------------------------------------------------------
+       AUTO SIMULATION
+       ------------------------------------------------------------- */
+    let simTimer = null;
+    function toggleAutoSim() {
+      appState.isAutoSim = !appState.isAutoSim;
+      const btn = document.getElementById('btn-auto-sim');
+      if (appState.isAutoSim) {
+        btn.innerText = "Auto Sim: ON";
+        btn.classList.add('active-sim');
+        simTimer = setInterval(() => {
+          appState.ports.forEach(p => {
+            if (p.status === 'CHARGING') {
+              p.energyKwh = (p.energyKwh || 0) + 0.3;
+              if (p.soc < 100) {
+                p.soc = Math.min(100, Math.round((p.soc + 0.5) * 10) / 10);
+              }
+              // Auto stop jika target kuota tercapai atau 100%
+              if (p.energyKwh >= p.targetKwh || p.soc >= 100) {
+                p.status = 'COMPLETED';
+                p.powerKw = 0;
+                p.mode = 'Kuota Terpenuhi';
+              }
+            }
+          });
+          renderAll();
+        }, 1500);
+      } else {
+        btn.innerText = "Auto Sim: OFF";
+        btn.classList.remove('active-sim');
+        clearInterval(simTimer);
+      }
+      saveState();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      renderAll();
+    });
+  </script>
+</body>
+</html>
